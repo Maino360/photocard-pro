@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PHOTOCARD PRO BD | প্রফেশনাল ফটো ফ্রেম এডিটর</title>
+    
+    <meta name="description" content="সহজ উপায়ে প্রফেশনাল ফটো ফ্রেম তৈরি করুন একদম ফ্রিতে।">
+    <meta property="og:title" content="PHOTOCARD PRO BD">
+    <meta property="og:description" content="আপনার পছন্দের ফ্রেম বেছে নিয়ে ছবি এডিট করুন।">
+    <meta name="theme-color" content="#10b981">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;600;700&display=swap');
+        
+        :root {
+            --accent: #10b981;
+            --accent-dark: #064e3b;
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.5);
+        }
+
+        body { 
+            font-family: 'Hind Siliguri', sans-serif; 
+            background: radial-gradient(circle at top right, #f8fafc, #eff6ff);
+            color: #0f172a; 
+            min-height: 100vh;
+        }
+
+        /* Animations */
+        @keyframes pulse-icon {
+            0% { transform: scale(1); filter: drop-shadow(0 0 0px var(--accent)); }
+            50% { transform: scale(1.1); filter: drop-shadow(0 0 10px var(--accent)); }
+            100% { transform: scale(1); filter: drop-shadow(0 0 0px var(--accent)); }
+        }
+        .animate-photo-icon { animation: pulse-icon 2s infinite ease-in-out; }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        }
+
+        .glass-swal-popup {
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(15px) !important;
+            -webkit-backdrop-filter: blur(15px) !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 30px !important;
+        }
+        .glass-swal-confirm {
+            background: linear-gradient(135deg, #10b981, #059669) !important;
+            border-radius: 15px !important;
+            padding: 12px 35px !important;
+            font-weight: 700 !important;
+            color: white !important;
+        }
+
+        #canvas-wrapper { 
+            background: white; 
+            padding: 8px; 
+            border-radius: 2.5rem; 
+            box-shadow: 0 25px 50px -12px rgba(16, 185, 129, 0.15);
+            border: 4px solid white;
+            overflow: hidden;
+        }
+        
+        .action-btn { 
+            background: white; border: 1px solid #e2e8f0; color: #64748b; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .action-btn:hover { background: #10b981; color: white; transform: translateY(-3px); }
+
+        .category-btn { 
+            transition: 0.3s; border: 1px solid transparent; 
+            background: #f1f5f9; color: #64748b; 
+        }
+        .category-btn.active { background: #0f172a; color: white; }
+
+        .wa-btn {
+            background: #25D366;
+            color: white;
+            box-shadow: 0 10px 20px -5px rgba(37, 211, 102, 0.3);
+            transition: 0.3s;
+        }
+        .wa-btn:hover { background: #128C7E; transform: translateY(-2px); }
+
+        .editor-slider::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body>
+
+    <nav class="sticky top-0 z-[100] bg-white/70 backdrop-blur-xl border-b border-white/20 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <button id="nav-back-btn" onclick="location.reload()" class="hidden w-10 h-10 flex items-center justify-center glass-card rounded-full text-slate-600 hover:text-emerald-600 transition-all">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <div class="flex items-center gap-3 cursor-pointer" onclick="location.reload()">
+                    <div class="relative">
+                        <div class="w-12 h-12 bg-emerald-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-200">
+                            <i class="fas fa-camera-retro text-white text-xl animate-photo-icon"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <h1 class="font-black text-2xl tracking-tighter leading-none text-slate-900">PHOTOCARD <span class="text-emerald-600">PRO.BD</span></h1>
+                        <p class="text-[10px] font-bold text-emerald-500 uppercase tracking-[0.3em]">Edition 2026</p>
+                    </div>
+                </div>
+            </div>
+            <div class="hidden md:flex items-center">
+                <a href="https://wa.me/8801402075915" target="_blank" class="wa-btn px-6 py-3 rounded-2xl text-[11px] font-black flex items-center gap-2 uppercase tracking-wider">
+                    <i class="fab fa-whatsapp text-base"></i> এডমিন সাপোর্ট
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-6 py-10 min-h-screen">
+        
+        <section id="editor-section" class="hidden animate-in fade-in slide-in-from-bottom-8 duration-700">
+            <div class="max-w-6xl mx-auto flex flex-col lg:flex-row gap-12 items-start">
+                <div class="w-full lg:w-1/2 sticky top-28">
+                    <div id="canvas-wrapper" class="mx-auto max-w-[450px]">
+                        <canvas id="photo-canvas"></canvas>
+                    </div>
+                </div>
+                
+                <div class="w-full lg:w-1/2 space-y-8">
+                    <div class="glass-card p-8 rounded-[2.5rem]">
+                        <h2 id="current-frame-title" class="text-3xl font-black text-slate-800 tracking-tight">ডিজাইন এডিটর</h2>
+                        <p class="text-slate-500 text-sm mt-2 font-medium">আপনার ছবি আপলোড করে ফ্রেমের সাথে অ্যাডজাস্ট করুন।</p>
+                        
+                        <div class="mt-8 space-y-6">
+                            <input type="file" id="imageLoader" class="hidden" accept="image/*">
+                            <div id="drop-zone" class="w-full py-12 border-2 border-dashed border-emerald-200 rounded-3xl flex flex-col items-center gap-3 cursor-pointer hover:bg-emerald-50/50 transition-all">
+                                <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center animate-bounce">
+                                    <i class="fas fa-cloud-upload-alt text-xl"></i>
+                                </div>
+                                <span class="font-bold text-slate-600 text-sm">গ্যালারি থেকে আপনার ছবি বেছে নিন</span>
+                            </div>
+                            
+                            <div class="grid grid-cols-4 gap-4">
+                                <button onclick="rotateImg()" class="action-btn h-14 rounded-2xl" title="Rotate"><i class="fas fa-redo"></i></button>
+                                <button onclick="flipImg()" class="action-btn h-14 rounded-2xl" title="Flip"><i class="fas fa-arrows-alt-h"></i></button>
+                                <button onclick="changeZoom(1.1)" class="action-btn h-14 rounded-2xl" title="Zoom In"><i class="fas fa-search-plus"></i></button>
+                                <button onclick="changeZoom(0.9)" class="action-btn h-14 rounded-2xl" title="Zoom Out"><i class="fas fa-search-minus"></i></button>
+                            </div>
+                            
+                            <button id="download-btn" onclick="downloadFinalImage()" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-lg shadow-2xl hover:bg-emerald-600 active:scale-95 transition-all flex items-center justify-center gap-3">
+                                <i class="fas fa-download"></i> গ্যালারিতে সেভ করুন
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="px-2">
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-1">দ্রুত ডিজাইন পরিবর্তন</p>
+                        <div id="quick-slider" class="editor-slider flex gap-4 overflow-x-auto pb-4"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="gallery-section">
+            <div class="text-center max-w-2xl mx-auto mb-16">
+                <h2 class="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter mb-4">
+                    ফ্রেম <span class="text-emerald-600 underline decoration-emerald-200 underline-offset-8">গ্যালারি</span>
+                </h2>
+                <p class="text-slate-500 font-medium">পছন্দের ফ্রেমটি বেছে নিয়ে এডিটিং শুরু করুন</p>
+                
+                <div class="flex flex-wrap gap-2 justify-center mt-10" id="filter-container">
+                    <button onclick="filterFrames('All')" class="category-btn active px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest">সকল ডিজাইন</button>
+                    <button onclick="filterFrames('Eid')" class="category-btn px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest">ঈদ স্পেশাল</button>
+                    <button onclick="filterFrames('PohelaBoishakh')" class="category-btn px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest">বৈশাখী</button>
+                    <button onclick="filterFrames('Special')" class="category-btn px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest">অন্যান্য</button>
+                </div>
+            </div>
+
+            <div id="frames-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-8"></div>
+            <div id="pagination" class="flex justify-center items-center gap-3 mt-20"></div>
+        </section>
+    </main>
+
+    <footer class="mt-32 pb-12 px-6">
+        <div class="max-w-7xl mx-auto glass-card rounded-[3rem] p-10 md:p-16 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-80 h-80 bg-emerald-100/30 rounded-full blur-3xl -mr-40 -mt-40"></div>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-16 relative z-10">
+                <div class="col-span-1">
+                    <h3 class="text-2xl font-black mb-5 uppercase tracking-tighter">PHOTOCARD<span class="text-emerald-600"> PRO.BD</span></h3>
+                    <p class="text-slate-500 font-medium leading-relaxed text-sm">সহজ উপায়ে এবং কোনো গ্রাফিক ডিজাইন জানা ছাড়াই প্রফেশনাল ফ্রেম তৈরির সেরা প্ল্যাটফর্ম।</p>
+                </div>
+                <div class="col-span-1 lg:col-span-2 flex flex-col md:flex-row gap-12 lg:justify-end">
+                    <div class="flex flex-col gap-6">
+                        <h4 class="text-xs font-black uppercase tracking-widest text-slate-400">এডমিন সাপোর্ট</h4>
+                        <a href="https://wa.me/8801402075915" target="_blank" class="wa-btn inline-flex items-center justify-center gap-3 px-10 py-5 rounded-[1.5rem] font-black text-sm">
+                            <i class="fab fa-whatsapp text-2xl"></i> হোয়াটসঅ্যাপ এডমিন
+                        </a>
+                        <div class="mt-4">
+                            <h4 class="text-[10px] font-black mb-4 uppercase tracking-[0.2em] text-slate-400">গুরুত্বপূর্ণ লিঙ্ক</h4>
+                            <div class="flex flex-wrap gap-x-8 gap-y-3">
+                                <a href="javascript:void(0)" onclick="location.reload()" class="text-sm font-bold text-slate-600 hover:text-emerald-600 transition">ডিজাইন গ্যালারি</a>
+                                <a href="javascript:void(0)" onclick="showHowTo()" class="text-sm font-bold text-slate-600 hover:text-emerald-600 transition">ব্যবহারের নিয়ম</a>
+                                <a href="javascript:void(0)" onclick="showPrivacy()" class="text-sm font-bold text-slate-600 hover:text-emerald-600 transition">প্রাইভেসি পলিসি</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-16 pt-10 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] font-black text-slate-400 tracking-[0.2em] uppercase">
+                <p>© 2026 PHOTOCARD PRO.BD .ALL RIGHTS RESERVED.</p>
+                <p class="text-slate-800 tracking-normal">CRAFTED BY <span class="text-emerald-600 font-black">MAINO CREATIVE</span></p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const canvas = new fabric.Canvas('photo-canvas', { preserveObjectStacking: true, backgroundColor: '#fff' });
+        let userPhoto = null;
+        let currentFrameData = null;
+        let framesData = []; // এটি খালি থাকবে, JSON থেকে লোড হবে
+        let filteredData = [];
+        const itemsPerPage = 8;
+
+        // JSON ফাইল থেকে লাইভ ডাটা লোড করার ফাংশন
+        async function loadLiveFrames() {
+            try {
+                const response = await fetch('frames.json');
+                if(!response.ok) throw new Error('Data not found');
+                framesData = await response.json();
+                filteredData = [...framesData];
+                renderGallery(1);
+            } catch (error) {
+                console.error("ফ্রেম লোড হতে সমস্যা হচ্ছে:", error);
+                document.getElementById('frames-grid').innerHTML = `
+                    <div class="col-span-full py-20 text-center">
+                        <i class="fas fa-exclamation-triangle text-4xl text-amber-500 mb-4"></i>
+                        <p class="font-bold text-slate-500 text-lg">ফ্রেম লোড হতে ব্যর্থ হয়েছে! রিপোজিটরিতে frames.json ফাইল চেক করুন।</p>
+                    </div>`;
+            }
+        }
+
+        function renderGallery(page) {
+            const grid = document.getElementById('frames-grid');
+            const pagination = document.getElementById('pagination');
+            grid.innerHTML = ''; pagination.innerHTML = '';
+            
+            const start = (page - 1) * itemsPerPage;
+            const currentItems = filteredData.slice(start, start + itemsPerPage);
+
+            currentItems.forEach(f => {
+                const card = document.createElement('div');
+                card.className = "glass-card p-5 cursor-pointer group rounded-[2.5rem] transition-all hover:-translate-y-2 hover:border-emerald-200";
+                card.onclick = () => openEditor(f);
+                card.innerHTML = `
+                    <div class="aspect-square bg-white rounded-2xl overflow-hidden flex items-center justify-center p-6 transition-all group-hover:bg-emerald-50">
+                        <img src="${f.url}" class="max-w-full max-h-full object-contain group-hover:scale-110 transition duration-500" crossorigin="anonymous">
+                    </div>
+                    <div class="mt-4 flex items-center justify-between px-1">
+                        <h3 class="text-[10px] font-black text-slate-700 uppercase tracking-tighter">${f.title}</h3>
+                        <div class="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center scale-0 group-hover:scale-100 transition-all shadow-lg shadow-emerald-200">
+                            <i class="fas fa-chevron-right text-[10px]"></i>
+                        </div>
+                    </div>`;
+                grid.appendChild(card);
+            });
+
+            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+            if(totalPages > 1) {
+                for (let i = 1; i <= totalPages; i++) {
+                    const btn = document.createElement('button');
+                    btn.className = `w-12 h-12 rounded-2xl font-black transition-all text-[10px] ${i === page ? 'bg-slate-900 text-white' : 'glass-card text-slate-500 hover:text-emerald-600'}`;
+                    btn.innerText = i;
+                    btn.onclick = () => { renderGallery(i); window.scrollTo({top: 0, behavior: 'smooth'}); };
+                    pagination.appendChild(btn);
+                }
+            }
+        }
+
+        function filterFrames(cat) {
+            document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+            if(event) event.target.classList.add('active');
+            filteredData = cat === 'All' ? framesData : framesData.filter(f => f.category === cat);
+            renderGallery(1);
+        }
+
+        function openEditor(f) {
+            currentFrameData = f;
+            document.getElementById('gallery-section').classList.add('hidden');
+            document.getElementById('editor-section').classList.remove('hidden');
+            document.getElementById('nav-back-btn').classList.remove('hidden');
+            document.getElementById('current-frame-title').innerText = f.title;
+            
+            const wrapper = document.getElementById('canvas-wrapper');
+            const cw = Math.min(wrapper.offsetWidth - 20, 450);
+            canvas.setWidth(cw); canvas.setHeight(cw);
+
+            Swal.fire({ title: 'ফ্রেম লোড হচ্ছে...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+            fabric.Image.fromURL(f.url, (img) => {
+                canvas.getObjects().forEach(obj => { if(obj !== userPhoto) canvas.remove(obj); });
+                img.set({ selectable: false, evented: false, scaleX: canvas.width/img.width, scaleY: canvas.height/img.height });
+                canvas.add(img); 
+                canvas.bringToFront(img);
+                if(userPhoto) canvas.sendToBack(userPhoto);
+                Swal.close();
+            }, { crossOrigin: 'anonymous' });
+
+            const slider = document.getElementById('quick-slider');
+            slider.innerHTML = '';
+            framesData.slice(0, 10).forEach(frame => {
+                const thumb = document.createElement('img');
+                thumb.src = frame.url;
+                thumb.className = "w-20 h-20 rounded-2xl glass-card p-2 cursor-pointer object-contain hover:border-emerald-500 transition-all";
+                thumb.onclick = () => openEditor(frame);
+                slider.appendChild(thumb);
+            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        document.getElementById('drop-zone').onclick = () => document.getElementById('imageLoader').click();
+        document.getElementById('imageLoader').onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (f) => {
+                fabric.Image.fromURL(f.target.result, (img) => {
+                    if (userPhoto) canvas.remove(userPhoto);
+                    userPhoto = img; 
+                    const scale = (canvas.width * 0.8) / img.width;
+                    userPhoto.set({ left: canvas.width/2, top: canvas.height/2, originX: 'center', originY: 'center', scaleX: scale, scaleY: scale, cornerColor: '#10b981', cornerSize: 12, transparentCorners: false, borderColor: '#10b981', cornerStyle: 'circle' });
+                    canvas.add(userPhoto); 
+                    canvas.sendToBack(userPhoto); 
+                    canvas.setActiveObject(userPhoto);
+                });
+            }
+            reader.readAsDataURL(file);
+        };
+
+        function rotateImg() { if(userPhoto) { userPhoto.rotate((userPhoto.angle + 90) % 360); canvas.renderAll(); } }
+        function flipImg() { if(userPhoto) { userPhoto.set('flipX', !userPhoto.flipX); canvas.renderAll(); } }
+        function changeZoom(m) { if(userPhoto) { userPhoto.scale(userPhoto.scaleX * m); canvas.renderAll(); } }
+
+        function downloadFinalImage() {
+            if(!userPhoto) {
+                return Swal.fire({ icon: 'info', title: 'ছবি সিলেক্ট করুন', text: 'আগে একটি ছবি আপলোড করুন!', confirmButtonText: 'ঠিক আছে', customClass: { popup: 'glass-swal-popup', confirmButton: 'glass-swal-confirm' }, buttonsStyling: false });
+            }
+            Swal.fire({ title: 'প্রসেসিং হচ্ছে...', text: 'আপনার ফটোটি সেভ হচ্ছে।', timer: 1500, showConfirmButton: false, didOpen: () => { Swal.showLoading(); } }).then(() => {
+                canvas.discardActiveObject().renderAll();
+                const link = document.createElement('a');
+                link.download = `PHOTOCARD-${Date.now()}.png`;
+                link.href = canvas.toDataURL({ format: 'png', quality: 1.0, multiplier: 4 });
+                link.click();
+                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#10b981', '#059669', '#ffffff'] });
+            });
+        }
+
+        function showHowTo() {
+            Swal.fire({
+                title: 'ব্যবহারের নিয়ম',
+                html: `<div class="text-left text-sm space-y-4 py-4 px-2 font-medium text-slate-600">
+                    <p>• গ্যালারি থেকে ফ্রেম নির্বাচন করুন।</p>
+                    <p>• নিজের ছবি আপলোড করুন।</p>
+                    <p>• আঙুল দিয়ে পজিশন ঠিক করে সেভ করুন।</p>
+                </div>`,
+                confirmButtonText: 'বুঝেছি',
+                customClass: { popup: 'glass-swal-popup', confirmButton: 'glass-swal-confirm' }
+            });
+        }
+
+        function showPrivacy() {
+            Swal.fire({
+                title: 'নিরাপত্তা পলিসি',
+                text: 'আপনার কোনো ছবি সার্ভারে জমা থাকে না, সব কাজ সরাসরি আপনার ফোনে হয়।',
+                confirmButtonText: 'ঠিক আছে',
+                customClass: { popup: 'glass-swal-popup', confirmButton: 'glass-swal-confirm' }
+            });
+        }
+
+        // উইন্ডো লোড হওয়ার সাথে সাথে JSON লোড শুরু হবে
+        window.onload = () => loadLiveFrames();
+    </script>
+</body>
+</html>
