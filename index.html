@@ -33,6 +33,21 @@
             min-height: 100vh;
         }
 
+        /* Shimmer/Skeleton Effect */
+        .shimmer {
+            background: #f6f7f8;
+            background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
+            background-repeat: no-repeat;
+            background-size: 800px 100%;
+            display: inline-block;
+            position: relative;
+            animation: shimmer 1.5s infinite linear;
+        }
+        @keyframes shimmer {
+            0% { background-position: -800px 0; }
+            100% { background-position: 800px 0; }
+        }
+
         /* Animations */
         @keyframes pulse-icon {
             0% { transform: scale(1); filter: drop-shadow(0 0 0px var(--accent)); }
@@ -184,7 +199,24 @@
                 </div>
             </div>
 
-            <div id="frames-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-8"></div>
+            <div id="frames-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-8">
+                <div class="glass-card p-5 rounded-[2.5rem] space-y-4">
+                    <div class="shimmer w-full aspect-square rounded-2xl"></div>
+                    <div class="shimmer h-4 w-3/4 mx-auto rounded-full"></div>
+                </div>
+                <div class="glass-card p-5 rounded-[2.5rem] space-y-4">
+                    <div class="shimmer w-full aspect-square rounded-2xl"></div>
+                    <div class="shimmer h-4 w-3/4 mx-auto rounded-full"></div>
+                </div>
+                <div class="glass-card p-5 rounded-[2.5rem] space-y-4 hidden sm:block">
+                    <div class="shimmer w-full aspect-square rounded-2xl"></div>
+                    <div class="shimmer h-4 w-3/4 mx-auto rounded-full"></div>
+                </div>
+                <div class="glass-card p-5 rounded-[2.5rem] space-y-4 hidden lg:block">
+                    <div class="shimmer w-full aspect-square rounded-2xl"></div>
+                    <div class="shimmer h-4 w-3/4 mx-auto rounded-full"></div>
+                </div>
+            </div>
             <div id="pagination" class="flex justify-center items-center gap-3 mt-20"></div>
         </section>
     </main>
@@ -225,13 +257,13 @@
         const canvas = new fabric.Canvas('photo-canvas', { preserveObjectStacking: true, backgroundColor: '#fff' });
         let userPhoto = null;
         let currentFrameData = null;
-        let framesData = []; // এটি খালি থাকবে, JSON থেকে লোড হবে
+        let framesData = []; 
         let filteredData = [];
         const itemsPerPage = 8;
 
-        // JSON ফাইল থেকে লাইভ ডাটা লোড করার ফাংশন
         async function loadLiveFrames() {
             try {
+                // ২ সেকেন্ডের কৃত্রিম ডিলে দেওয়া হয়েছে যাতে সিমার ইফেক্ট বোঝা যায় (অপশনাল)
                 const response = await fetch('frames.json');
                 if(!response.ok) throw new Error('Data not found');
                 framesData = await response.json();
@@ -240,9 +272,13 @@
             } catch (error) {
                 console.error("ফ্রেম লোড হতে সমস্যা হচ্ছে:", error);
                 document.getElementById('frames-grid').innerHTML = `
-                    <div class="col-span-full py-20 text-center">
-                        <i class="fas fa-exclamation-triangle text-4xl text-amber-500 mb-4"></i>
-                        <p class="font-bold text-slate-500 text-lg">ফ্রেম লোড হতে ব্যর্থ হয়েছে! রিপোজিটরিতে frames.json ফাইল চেক করুন।</p>
+                    <div class="col-span-full py-20 text-center flex flex-col items-center">
+                        <div class="w-20 h-20 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mb-4">
+                            <i class="fas fa-wifi text-3xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-800">কানেকশন সমস্যা!</h3>
+                        <p class="text-slate-500 mb-6 text-sm">ফ্রেম লোড করা সম্ভব হচ্ছে না। আপনার ইন্টারনেট চেক করে আবার চেষ্টা করুন।</p>
+                        <button onclick="location.reload()" class="px-8 py-3 bg-emerald-600 text-white rounded-2xl font-bold shadow-lg shadow-emerald-100">আবার চেষ্টা করুন</button>
                     </div>`;
             }
         }
@@ -257,7 +293,7 @@
 
             currentItems.forEach(f => {
                 const card = document.createElement('div');
-                card.className = "glass-card p-5 cursor-pointer group rounded-[2.5rem] transition-all hover:-translate-y-2 hover:border-emerald-200";
+                card.className = "glass-card p-5 cursor-pointer group rounded-[2.5rem] transition-all hover:-translate-y-2 hover:border-emerald-200 animate-in fade-in duration-500";
                 card.onclick = () => openEditor(f);
                 card.innerHTML = `
                     <div class="aspect-square bg-white rounded-2xl overflow-hidden flex items-center justify-center p-6 transition-all group-hover:bg-emerald-50">
@@ -384,7 +420,6 @@
             });
         }
 
-        // উইন্ডো লোড হওয়ার সাথে সাথে JSON লোড শুরু হবে
         window.onload = () => loadLiveFrames();
     </script>
 </body>
