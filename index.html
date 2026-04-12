@@ -134,8 +134,15 @@
                 
                 <div class="w-full lg:w-1/2 space-y-8">
                     <div class="glass-card p-8 rounded-[2.5rem]">
-                        <h2 id="current-frame-title" class="text-3xl font-black text-slate-800 tracking-tight">ডিজাইন এডিটর</h2>
-                        <p class="text-slate-500 text-sm mt-2 font-medium">আপনার ছবি আপলোড করে ফ্রেমের সাথে অ্যাডজাস্ট করুন।</p>
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h2 id="current-frame-title" class="text-3xl font-black text-slate-800 tracking-tight">ডিজাইন এডিটর</h2>
+                                <p class="text-slate-500 text-sm mt-2 font-medium">আপনার ছবি আপলোড করে ফ্রেমের সাথে অ্যাডজাস্ট করুন।</p>
+                            </div>
+                            <button onclick="shareCurrentFrame()" class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all shadow-sm">
+                                <i class="fas fa-share-alt"></i>
+                            </button>
+                        </div>
                         
                         <div class="mt-8 space-y-6">
                             <input type="file" id="imageLoader" class="hidden" accept="image/*">
@@ -220,15 +227,22 @@
     </footer>
 
     <script>
-        const canvas = new fabric.Canvas('photo-canvas', { preserveObjectStacking: true, backgroundColor: '#fff' });
+        const canvas = new fabric.Canvas('photo-canvas', { 
+            preserveObjectStacking: true, 
+            backgroundColor: '#fff',
+            imageSmoothingEnabled: true,
+            imageSmoothingQuality: 'high'
+        });
+        
         let userPhoto = null;
         let currentFrameData = null;
         let framesData = []; 
         let filteredData = [];
-        const itemsPerPage = 6; // বড় প্রিভিউ এর জন্য ৬টি
+        const itemsPerPage = 6;
 
         async function loadLiveFrames() {
             try {
+                // এখানে আপনার frames.json ফাইলটি থাকতে হবে
                 const response = await fetch('frames.json');
                 framesData = await response.json();
                 filteredData = [...framesData];
@@ -238,18 +252,25 @@
             }
         }
 
-        // --- শেয়ার ফাংশন ---
-        async function shareFrame(title) {
+        // --- শেয়ার ফাংশন (এডিটরের ভেতর থেকে) ---
+        async function shareCurrentFrame() {
+            if(!currentFrameData) return;
+            const title = currentFrameData.title;
+            
             if (navigator.share) {
                 try {
                     await navigator.share({
                         title: title,
-                        text: 'আমার চমৎকার এই ডিজাইনটি দেখুন!',
+                        text: `আমি PHOTOCARD PRO BD দিয়ে '${title}' ফ্রেমটি এডিট করছি। আপনিও ট্রাই করুন!`,
                         url: window.location.href
                     });
                 } catch (err) {}
             } else {
-                Swal.fire({ text: 'লিঙ্ক কপি করুন: ' + window.location.href, customClass: { popup: 'glass-swal-popup' } });
+                Swal.fire({ 
+                    title: 'লিঙ্ক কপি করুন',
+                    text: window.location.href, 
+                    customClass: { popup: 'glass-swal-popup' } 
+                });
             }
         }
 
@@ -276,9 +297,6 @@
                             <p class="text-[9px] font-black text-emerald-500 uppercase tracking-widest">${f.category}</p>
                             <h3 class="text-lg font-black text-slate-700 uppercase tracking-tighter">${f.title}</h3>
                         </div>
-                        <button onclick="shareFrame('${f.title}')" class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all">
-                            <i class="fas fa-share-alt"></i>
-                        </button>
                     </div>`;
                 grid.appendChild(card);
             });
@@ -319,8 +337,15 @@
             Swal.fire({ title: 'লোডিং...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
 
             fabric.Image.fromURL(f.url, (img) => {
+                // আগের ফ্রেম ডিলিট করা কিন্তু ইউজার ফটো রাখা
                 canvas.getObjects().forEach(obj => { if(obj !== userPhoto) canvas.remove(obj); });
-                img.set({ selectable: false, evented: false, scaleX: canvas.width/img.width, scaleY: canvas.height/img.height });
+                
+                img.set({ 
+                    selectable: false, 
+                    evented: false, 
+                    scaleX: canvas.width/img.width, 
+                    scaleY: canvas.height/img.height 
+                });
                 canvas.add(img); 
                 canvas.bringToFront(img);
                 if(userPhoto) canvas.sendToBack(userPhoto);
@@ -349,7 +374,19 @@
                     if (userPhoto) canvas.remove(userPhoto);
                     userPhoto = img; 
                     const scale = (canvas.width * 0.8) / img.width;
-                    userPhoto.set({ left: canvas.width/2, top: canvas.height/2, originX: 'center', originY: 'center', scaleX: scale, scaleY: scale, cornerColor: '#10b981', cornerSize: 12, transparentCorners: false, borderColor: '#10b981', cornerStyle: 'circle' });
+                    userPhoto.set({ 
+                        left: canvas.width/2, 
+                        top: canvas.height/2, 
+                        originX: 'center', 
+                        originY: 'center', 
+                        scaleX: scale, 
+                        scaleY: scale, 
+                        cornerColor: '#10b981', 
+                        cornerSize: 12, 
+                        transparentCorners: false, 
+                        borderColor: '#10b981', 
+                        cornerStyle: 'circle' 
+                    });
                     canvas.add(userPhoto); 
                     canvas.sendToBack(userPhoto); 
                     canvas.setActiveObject(userPhoto);
@@ -370,8 +407,14 @@
                 canvas.discardActiveObject().renderAll();
                 const link = document.createElement('a');
                 link.download = `PHOTOCARD-${Date.now()}.png`;
-                // Multiplier 4 keeps it high quality
-                link.href = canvas.toDataURL({ format: 'png', quality: 1.0, multiplier: 4 });
+                
+                // কোয়ালিটি আরও উন্নত করার জন্য multiplier 5 এবং smoothing ব্যবহার করা হয়েছে
+                link.href = canvas.toDataURL({ 
+                    format: 'png', 
+                    quality: 1.0, 
+                    multiplier: 5, // এটি ইমেজের রেজোলিউশন বহুগুণ বাড়িয়ে দেয়
+                    enableRetinaScaling: true
+                });
                 link.click();
                 confetti({ particleCount: 150, spread: 70 });
             });
