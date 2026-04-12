@@ -99,10 +99,10 @@
     <nav class="sticky top-0 z-[100] bg-white/70 backdrop-blur-xl border-b border-white/20 px-6 py-4">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-4">
-                <button id="nav-back-btn" onclick="location.reload()" class="hidden w-10 h-10 flex items-center justify-center glass-card rounded-full text-slate-600 hover:text-emerald-600 transition-all">
+                <button id="nav-back-btn" onclick="goToHome()" class="hidden w-10 h-10 flex items-center justify-center glass-card rounded-full text-slate-600 hover:text-emerald-600 transition-all">
                     <i class="fas fa-arrow-left"></i>
                 </button>
-                <div class="flex items-center gap-3 cursor-pointer" onclick="location.reload()">
+                <div class="flex items-center gap-3 cursor-pointer" onclick="goToHome()">
                     <div class="relative">
                         <div class="w-12 h-12 bg-emerald-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-200">
                             <i class="fas fa-camera-retro text-white text-xl animate-photo-icon"></i>
@@ -211,7 +211,7 @@
                         </a>
                         <div class="mt-4">
                             <div class="flex flex-wrap justify-center md:justify-end gap-x-8 gap-y-3">
-                                <a href="javascript:void(0)" onclick="location.reload()" class="text-sm font-bold text-slate-600 hover:text-emerald-600 transition">ডিজাইন গ্যালারি</a>
+                                <a href="javascript:void(0)" onclick="goToHome()" class="text-sm font-bold text-slate-600 hover:text-emerald-600 transition">ডিজাইন গ্যালারি</a>
                                 <a href="javascript:void(0)" onclick="showHowTo()" class="text-sm font-bold text-slate-600 hover:text-emerald-600 transition">ব্যবহারের নিয়ম</a>
                                 <a href="javascript:void(0)" onclick="showPrivacy()" class="text-sm font-bold text-slate-600 hover:text-emerald-600 transition">প্রাইভেসি পলিসি</a>
                             </div>
@@ -242,36 +242,52 @@
 
         async function loadLiveFrames() {
             try {
-                // এখানে আপনার frames.json ফাইলটি থাকতে হবে
                 const response = await fetch('frames.json');
                 framesData = await response.json();
                 filteredData = [...framesData];
                 renderGallery(1);
+
+                // --- URL Parameter চেক করে সরাসরি ফ্রেম ওপেন করার কোড ---
+                const urlParams = new URLSearchParams(window.location.search);
+                const frameId = urlParams.get('frame');
+                if (frameId) {
+                    const frameToOpen = framesData.find(f => f.id == frameId);
+                    if (frameToOpen) {
+                        openEditor(frameToOpen);
+                    }
+                }
             } catch (error) {
                 console.error("error:", error);
             }
         }
 
-        // --- শেয়ার ফাংশন (এডিটরের ভেতর থেকে) ---
+        // --- শেয়ার ফাংশন আপডেট (URL-এ ফ্রেম আইডি যোগ করা হয়েছে) ---
         async function shareCurrentFrame() {
             if(!currentFrameData) return;
             const title = currentFrameData.title;
+            // মূল ডোমেইনের সাথে বর্তমান ফ্রেমের আইডি যোগ করা হচ্ছে
+            const shareUrl = `${window.location.origin}${window.location.pathname}?frame=${currentFrameData.id}`;
             
             if (navigator.share) {
                 try {
                     await navigator.share({
                         title: title,
                         text: `আমি PHOTOCARD PRO BD দিয়ে '${title}' ফ্রেমটি এডিট করছি। আপনিও ট্রাই করুন!`,
-                        url: window.location.href
+                        url: shareUrl
                     });
                 } catch (err) {}
             } else {
                 Swal.fire({ 
                     title: 'লিঙ্ক কপি করুন',
-                    text: window.location.href, 
+                    text: shareUrl, 
                     customClass: { popup: 'glass-swal-popup' } 
                 });
             }
+        }
+
+        function goToHome() {
+            // URL ক্লিন করে হোম পেজে যাওয়া
+            window.location.href = window.location.origin + window.location.pathname;
         }
 
         function renderGallery(page) {
@@ -337,7 +353,6 @@
             Swal.fire({ title: 'লোডিং...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
 
             fabric.Image.fromURL(f.url, (img) => {
-                // আগের ফ্রেম ডিলিট করা কিন্তু ইউজার ফটো রাখা
                 canvas.getObjects().forEach(obj => { if(obj !== userPhoto) canvas.remove(obj); });
                 
                 img.set({ 
@@ -407,12 +422,10 @@
                 canvas.discardActiveObject().renderAll();
                 const link = document.createElement('a');
                 link.download = `PHOTOCARD-${Date.now()}.png`;
-                
-                // কোয়ালিটি আরও উন্নত করার জন্য multiplier 5 এবং smoothing ব্যবহার করা হয়েছে
                 link.href = canvas.toDataURL({ 
                     format: 'png', 
                     quality: 1.0, 
-                    multiplier: 5, // এটি ইমেজের রেজোলিউশন বহুগুণ বাড়িয়ে দেয়
+                    multiplier: 5,
                     enableRetinaScaling: true
                 });
                 link.click();
