@@ -3,11 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PHOTOCARD PRO BD | প্রফেশনাল ফটো ফ্রেম এডিটর</title>
     
-    <meta name="description" content="সহজ উপায়ে প্রফেশনাল ফটো ফ্রেম তৈরি করুন একদম ফ্রিতে।">
-    <meta property="og:title" content="PHOTOCARD PRO BD">
-    <meta property="og:description" content="আপনার পছন্দের ফ্রেম বেছে নিয়ে ছবি এডিট করুন।">
+    <title>PHOTOCARD PRO BD | প্রফেশনাল ফটো ফ্রেম এডিটর</title>
+    <meta name="title" content="PHOTOCARD PRO BD | প্রফেশনাল ফটো ফ্রেম এডিটর">
+    <meta name="description" content="সহজ উপায়ে প্রফেশনাল ফটো ফ্রেম তৈরি করুন একদম ফ্রিতে। ঈদ, বৈশাখ ও বিশেষ দিনের চমৎকার সব ফ্রেম এখন এক ক্লিকেই!">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://photocard.pro.bd/">
+    <meta property="og:title" content="PHOTOCARD PRO BD | নিজের ছবি দিয়ে ফ্রেম বানান">
+    <meta property="og:description" content="পছন্দের ফ্রেম বেছে নিয়ে আপনার ছবি বসিয়ে তৈরি করুন আকর্ষণীয় ডিজাইন। সম্পূর্ণ ফ্রি এবং সহজ!">
+    <meta property="og:image" content="https://photocard.pro.bd/preview-banner.jpg">
+
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://photocard.pro.bd/">
+    <meta property="twitter:title" content="PHOTOCARD PRO BD">
+    <meta property="twitter:description" content="সহজ উপায়ে প্রফেশনাল ফটো ফ্রেম তৈরি করুন একদম ফ্রিতে।">
+    <meta property="twitter:image" content="https://photocard.pro.bd/preview-banner.jpg">
+    
     <meta name="theme-color" content="#10b981">
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -247,7 +259,6 @@
                 filteredData = [...framesData];
                 renderGallery(1);
 
-                // --- URL Parameter চেক করে সরাসরি ফ্রেম ওপেন করার কোড ---
                 const urlParams = new URLSearchParams(window.location.search);
                 const frameId = urlParams.get('frame');
                 if (frameId) {
@@ -261,11 +272,9 @@
             }
         }
 
-        // --- শেয়ার ফাংশন আপডেট (URL-এ ফ্রেম আইডি যোগ করা হয়েছে) ---
         async function shareCurrentFrame() {
             if(!currentFrameData) return;
             const title = currentFrameData.title;
-            // মূল ডোমেইনের সাথে বর্তমান ফ্রেমের আইডি যোগ করা হচ্ছে
             const shareUrl = `${window.location.origin}${window.location.pathname}?frame=${currentFrameData.id}`;
             
             if (navigator.share) {
@@ -286,7 +295,6 @@
         }
 
         function goToHome() {
-            // URL ক্লিন করে হোম পেজে যাওয়া
             window.location.href = window.location.origin + window.location.pathname;
         }
 
